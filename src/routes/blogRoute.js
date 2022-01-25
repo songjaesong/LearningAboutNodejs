@@ -1,7 +1,6 @@
 const {Router} = require('express')
 const blogRouter = Router();
-const { Blog } = require('../models/Blog')
-const { User } = require("../models/User")
+const { Blog, User } = require('../models/')
 const {isValidObjectId} = require('mongoose')
 
 blogRouter.post('/', async(req, res) => {
@@ -16,7 +15,8 @@ blogRouter.post('/', async(req, res) => {
         let user = await User.findOne(userId);
         if(!user) res.status(400).send({err : "user does not exist"});
 
-        let blog = new Blog({ ...req.body, user});
+        let blog = new Blog(req.body);
+        //let blog = new Blog({ ...req.body, user});
         await blog.save();
         return res.send({blog});
     }catch(err){
@@ -70,13 +70,15 @@ blogRouter.put('/:blogId', async(req, res) => {
 // blog의 특정 부분을 수정
 blogRouter.patch('/:blogId/live', async(req, res) => {
     try{
-        const {blogId} = req.params;
+        const { blogId } = req.params;
         if(!isValidObjectId(blogId)) res.status(400).send({ err : "blogId is invalid"});
 
-        const { islive } = res.body;
+        const { islive } = req.body;
+        console.log(islive);
+
         if(typeof islive !== 'boolean') res.status(400).send({ err : "boolean is live is required"});
 
-        const blog = await Blog.findOneAndUpdate({_id : blogId}, {islive}, {new : true});
+        const blog = await Blog.findByIdAndUpdate(blogId, {islive}, {new : true});
         return res.send({blog});
     }catch(err){
         console.log(err);
